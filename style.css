@@ -1,0 +1,16 @@
+body {
+    margin: 0;
+    overflow: hidden; /* Oculta las barras de desplazamiento */
+    background-color: #000; /* Fondo negro */
+}
+
+#matrixCanvas {
+    display: block;
+    background-color: #000; /* Asegura que el canvas también tenga fondo negro */
+    position: absolute; /* Para que el canvas ocupe todo el espacio */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; /* Asegura que el canvas esté al frente si hubiera otros elementos */
+}
