@@ -2,12 +2,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('matrixCanvas');
     const ctx = canvas.getContext('2d');
 
+    // La meta viewport en HTML ya ayuda con la escalabilidad
+    // Pero el canvas necesita redimensionarse a las dimensiones del dispositivo
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     const teAmoPhrase = 'TE AMO';
-    const fontSize = 16; // Tamaño de fuente para la lluvia (ajusta a tu gusto)
-    const unionFactor = 0.6; // Ajusta este valor para unir más o menos las columnas
+    // Podrías ajustar fontSize y unionFactor aquí para móviles si las frases se ven muy grandes o muy pequeñas.
+    // Por ejemplo, usar vw (viewport width) o vh (viewport height) para fontSize
+    // o tener un fontSize diferente para pantallas pequeñas.
+    const fontSize = 16; 
+    const unionFactor = 0.6; 
     const columnSpacing = fontSize * teAmoPhrase.length * unionFactor;
     const columns = Math.floor(canvas.width / columnSpacing);
 
@@ -19,67 +24,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Parámetros de Velocidad y Persistencia ---
-    const dropSpeed = 1.2; // Velocidad de caída de las frases (más pequeño = más lento)
-    const animationIntervalDelay = 75; // Velocidad general de la animación (más grande = menos FPS = más lento)
+    const dropSpeed = 1.2; 
+    const animationIntervalDelay = 75; 
 
     // --- Parámetros de Opacidad y Reinicio ---
-    const initialTrailOpacity = 0.05; // Opacidad del rastro durante la fase inicial (más alto = más denso)
-    const initialResetProbability = 0.0001; // Probabilidad de reinicio en fase inicial (más bajo = menos reinicios)
+    const initialTrailOpacity = 0.05; 
+    const initialResetProbability = 0.0001; 
 
-    const normalTrailOpacity = 0.05; // Opacidad del rastro en fase normal (más bajo = más persistente)
-    const normalResetProbability = 0.98; // Probabilidad de reinicio en fase normal (más alto = más reinicios)
+    const normalTrailOpacity = 0.05; 
+    const normalResetProbability = 0.98; 
 
     // --- Control de la Animación de Inicio ---
     let animationPhase = 'initial';
     let initialAnimationTimer = 0;
-    const initialPhaseDuration = 3000; // Duración de la fase inicial (3 segundos)
-    const transitionPhaseDuration = 1000; // Duración de la fase de transición (1 segundo)
+    const initialPhaseDuration = 3000; 
+    const transitionPhaseDuration = 1000; 
 
-    // --- Nuevas variables para el efecto de clic ---
-    const explosionParticles = []; // Array para almacenar las partículas de la explosión
-    const explosionChars = 'TEAMO'; // Caracteres para la explosión
-    let clickText = null; // Objeto para el texto "TE AMO" que aparece al hacer clic
+    // --- Variables para el efecto de clic/toque ---
+    const explosionParticles = []; 
+    const explosionChars = 'TEAMO!@#$%^&*()_+=-{}[]|:;<>,./?'; 
+    let clickText = null; 
 
-    // --- Función para crear partículas de explosión ---
     function createExplosion(x, y) {
-        const numParticles = 50; // Número de partículas en la explosión
-        const maxSpeed = 8; // Velocidad máxima de las partículas
-        const particleLifetime = 60; // Cuántos frames durará la partícula (aproximadamente)
+        const numParticles = 50; 
+        const maxSpeed = 8; 
+        const particleLifetime = 60; 
 
         for (let i = 0; i < numParticles; i++) {
-            const angle = Math.random() * Math.PI * 2; // Ángulo aleatorio
-            const speed = Math.random() * maxSpeed; // Velocidad aleatoria
+            const angle = Math.random() * Math.PI * 2; 
+            const speed = Math.random() * maxSpeed; 
             explosionParticles.push({
                 x: x,
                 y: y,
-                vx: Math.cos(angle) * speed, // Velocidad en X
-                vy: Math.sin(angle) * speed, // Velocidad en Y
-                char: explosionChars.charAt(Math.floor(Math.random() * explosionChars.length)), // Carácter aleatorio
-                opacity: 1, // Opacidad inicial
-                lifetime: particleLifetime, // Vida útil
-                initialLifetime: particleLifetime // Para calcular la opacidad
+                vx: Math.cos(angle) * speed, 
+                vy: Math.sin(angle) * speed, 
+                char: explosionChars.charAt(Math.floor(Math.random() * explosionChars.length)), 
+                opacity: 1, 
+                lifetime: particleLifetime, 
+                initialLifetime: particleLifetime 
             });
         }
     }
 
-    // --- Función para dibujar el texto "TE AMO" al hacer clic ---
     function createClickText(x, y) {
         clickText = {
             x: x,
             y: y,
             text: teAmoPhrase,
             opacity: 1,
-            lifetime: 60, // Cuántos frames durará el texto "TE AMO" (aproximadamente)
-            initialLifetime: 100
+            lifetime: 80, 
+            initialLifetime: 80
         };
     }
 
-    // --- Event Listener para el clic ---
+    // --- Event Listener para el clic (desktops) ---
     canvas.addEventListener('click', (event) => {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
         createExplosion(mouseX, mouseY);
         createClickText(mouseX, mouseY);
+    });
+
+    // --- NUEVO: Event Listener para el toque (móviles) ---
+    canvas.addEventListener('touchstart', (event) => {
+        // Prevenir el comportamiento por defecto (ej. scroll o zoom con el toque)
+        event.preventDefault(); 
+        // Acceder a las coordenadas del primer toque
+        const touchX = event.touches[0].clientX;
+        const touchY = event.touches[0].clientY;
+        createExplosion(touchX, touchY);
+        createClickText(touchX, touchY);
     });
 
 
@@ -129,19 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 3. Dibuja y actualiza las partículas de explosión
-        ctx.font = `${fontSize * 0.8}px monospace`; // Un poco más pequeñas
+        ctx.font = `${fontSize * 0.8}px monospace`; 
         for (let i = explosionParticles.length - 1; i >= 0; i--) {
             const p = explosionParticles[i];
             p.x += p.vx;
             p.y += p.vy;
             p.lifetime--;
-            p.opacity = p.lifetime / p.initialLifetime; // Disminuye la opacidad
+            p.opacity = p.lifetime / p.initialLifetime; 
 
-            ctx.fillStyle = `rgba(255, 0, 127, ${p.opacity})`; // Rosa brillante con opacidad variable
+            ctx.fillStyle = `rgba(255, 0, 127, ${p.opacity})`; 
             ctx.fillText(p.char, p.x, p.y);
 
             if (p.lifetime <= 0) {
-                explosionParticles.splice(i, 1); // Elimina la partícula si ya no es visible
+                explosionParticles.splice(i, 1); 
             }
         }
 
@@ -150,14 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
             clickText.lifetime--;
             clickText.opacity = clickText.lifetime / clickText.initialLifetime;
 
-            ctx.fillStyle = `rgba(255, 0, 127, ${clickText.opacity})`; // Blanco brillante para el texto del clic
-            ctx.font = `bold ${fontSize * 2}px sans-serif`; // Más grande y en negrita
-            ctx.textAlign = 'center'; // Centra el texto en el punto del clic
+            ctx.fillStyle = `rgba(255, 0, 127, ${clickText.opacity})`; 
+            ctx.font = `bold ${fontSize * 1.2}px monospace`; 
+            ctx.textAlign = 'center'; 
             ctx.fillText(clickText.text, clickText.x, clickText.y);
-            ctx.textAlign = 'left'; // Restaura la alineación por defecto para la lluvia
+            ctx.textAlign = 'left'; 
 
             if (clickText.lifetime <= 0) {
-                clickText = null; // Elimina el texto si ya no es visible
+                clickText = null; 
             }
         }
     }
@@ -167,8 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        const newColumns = Math.floor(canvas.width / columnSpacing);
-        drops.length = 0;
+        // Recalcular columnas y re-inicializar gotas para el nuevo tamaño
+        const newColumns = Math.floor(canvas.width / columnSpacing); 
+        drops.length = 0; 
         for (let i = 0; i < newColumns; i++) {
             drops[i] = {
                 y: Math.random() * (canvas.height / fontSize)
